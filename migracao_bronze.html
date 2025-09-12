@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: migracao_tabelas_bronze.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html" class="active">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Job de Ingestão Bronze</h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>Este script PySpark é a implementação da tarefa <code>migrar_tabela_bronze_{table_name}</code>, o principal job de extração e carga (ETL) da "Fábrica de DAGs". Sua responsabilidade é extrair dados de uma fonte (Oracle, Postgres, etc.) e salvá-los na camada <strong>Bronze</strong> do BigQuery.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a> Uma característica arquitetural proeminente é o uso de um carregador de módulos dinâmico, que busca e importa dependências de um bucket do GCS em tempo de execução.</p>
+            </section>
+            
+            <section>
+                <h2>Arquitetura de Módulos Dinâmicos</h2>
+                <p>O design do job é baseado na função <code>use_my_module</code>, que implementa um padrão de injeção de dependência dinâmica, alinhado com o conceito de ter um conjunto de funções e operadores padronizados e reutilizáveis.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></p>
+                <details>
+                    <summary>Fluxo do Carregamento Dinâmico</summary>
+                    <ol>
+                        <li>O código de um módulo compartilhado (ex: <code>validation.py</code>) é baixado de um bucket central no GCS.</li>
+                        <li>A biblioteca <code>importlib</code> do Python é usada para importar este arquivo como um módulo.</li>
+                        <li>O método desejado é acessado e executado.</li>
+                        <li>O arquivo local do módulo é removido após o uso.</li>
+                    </ol>
+                </details>
+                <p class="note" style="font-style: italic; color: #555; border-left: 3px solid var(--secondary-color); padding-left: 1em; margin-top: 1em;"><strong>Implicação Arquitetural:</strong> Este padrão desacopla o job de suas dependências. Módulos comuns podem ser atualizados em um local central (GCS) sem a necessidade de reimplantar o job principal, conferindo alta flexibilidade.</p>
+            </section>
+
+            <section>
+                <h2>Lógica de Ingestão de Dados</h2>
+                <p>O script implementa uma lógica de ingestão que se adapta ao estado da tabela de destino e ao volume de dados na origem.</p>
+                <dl>
+                    <dt>Validação Pré-Execução (Quality Gate)</dt>
+                    <dd>Antes de iniciar a extração, o job executa <code>validation.chk_qty_columns</code>. Se houver divergência de esquema, uma notificação de "warning" é enviada, conforme o processo de monitoramento.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></dd>
+
+                    <dt>Estratégia de Carga Dinâmica</dt>
+                    <dd>O job determina o modo de carga (<code>overwrite</code> ou <code>append</code>) com base na existência da tabela no BigQuery e na presença de uma coluna de data para controle incremental, definida no YAML de configuração.<a href="sources/Fabrica_de_DAGs.pdf#page=4" class="citation-link" target="_blank">[fonte]</a></dd>
+                    
+                    <dt>Modo <code>overwrite</code> (Carga Completa)</dt>
+                    <dd>
+                        Utilizado para cargas iniciais, com uma otimização para tabelas de grande volume: se a tabela for grande, o job inicia um processo de <strong>carga particionada por data</strong>, processando a extração em lotes mensais.
+                    </dd>
+                    
+                    <dt>Modo <code>append</code> (Carga Incremental)</dt>
+                    <dd>Para cargas subsequentes, o job busca a data máxima existente na tabela Bronze e constrói dinamicamente uma cláusula <code>WHERE</code> para extrair apenas registros novos ou atualizados da fonte.</dd>
+                </dl>
+            </section>
+            
+            <section>
+                <h2>Integração com o Ecossistema do Framework</h2>
+                <p>Este script atua como o orquestrador central que consome as funcionalidades dos diversos módulos do framework.</p>
+                 <ul>
+                    <li><strong><code>connector</code>:</strong> Carrega dinamicamente o conector específico para a fonte de dados e para o BigQuery.</li>
+                    <li><strong><code>transformation</code>:</strong> Utiliza funções para carregar queries SQL, enriquecer com metadados e padronizar tipos de dados.</li>
+                    <li><strong><code>validation</code>:</strong> Emprega o módulo para checagens de esquema pré-carga, validação de volumetria pós-carga, e para o envio de alertas de "warning" e "erro".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                </ul>
+            </section>
+
+        </article>
+    </main>
+</body>
+</html>

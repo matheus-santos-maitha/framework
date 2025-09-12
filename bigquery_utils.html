@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: bigquery_utils.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação, caso o CSS externo não carregue */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html" class="active">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Módulo <code>bigquery_utils.py</code></h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>O script <code>bigquery_utils.py</code> é um módulo utilitário procedural, projetado para simplificar e padronizar a execução de queries SQL no BigQuery a partir do Airflow. Ele serve como o motor de execução para as DAGs que operam puramente com SQL, como as DAGs de relatório (<code>RELATORIO_NF_PORTAL_JDE</code>, <code>RELATORIO_RECUPERA_ACORDO_LIQUIDADO</code>, etc.)<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>. Este módulo implementa o padrão de carregar a lógica de negócio de arquivos <code>.sql</code> externos.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+            </section>
+            
+            <section>
+                <h2>Centralização de Configurações e Padrões</h2>
+                <p>O módulo estabelece um conjunto de convenções e configurações centralizadas para garantir a consistência entre as DAGs.</p>
+                <dl>
+                    <dt>Constantes</dt>
+                    <dd>
+                        <ul>
+                            <li><strong><code>GCP_CONN_ID = 'bigquery_default'</code>:</strong> Padroniza o ID da conexão do Airflow a ser utilizado.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                            <li><strong><code>QUERIES_DIR</code>:</strong> Define um caminho base para o armazenamento de todos os arquivos <code>.sql</code>.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                        </ul>
+                    </dd>
+                     <dt>Função <code>get_bigquery_hook()</code></dt>
+                    <dd>Atua como uma fábrica simples que instancia o <code>BigQueryHook</code> do Airflow.</dd>
+                </dl>
+            </section>
+
+            <section>
+                <h2>Relação com as DAGs de Relatório</h2>
+                <p>Este módulo é a implementação direta do padrão de execução descrito nos documentos das DAGs de relatório.</p>
+                <figure>
+                    <figcaption>Mapeamento entre a Documentação da DAG e o Código Utilitário</figcaption>
+                    <p>Para uma DAG como <code>RELATORIO_NF_PORTAL_JDE</code>:</p>
+                    <ul>
+                        <li>O <strong>"Diretório de Queries SQL"</strong> documentado corresponde ao parâmetro <code>query_name</code> da função.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                        <li>A <strong>"Tabela de Destino"</strong> documentada corresponde ao parâmetro <code>destination_table</code>.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                        <li>A <strong>"Conexão GCP"</strong> documentada corresponde à constante <code>GCP_CONN_ID</code>.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                    </ul>
+                </figure>
+            </section>
+        </article>
+    </main>
+</body>
+</html>

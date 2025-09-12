@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: connector.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html" class="active">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Módulo <code>connector.py</code></h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>O script <code>connector.py</code> é um módulo de infraestrutura essencial que implementa o princípio de fornecer uma <strong>"única interface para realização de conexão com os bancos de dados"</strong>.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Ele utiliza padrões de design de orientação a objetos para criar uma camada de abstração, simplificando e padronizando a forma como os jobs PySpark interagem com múltiplas fontes de dados (Oracle, Postgres, SQL Server) e com o destino (BigQuery).<a href="sources/Fabrica_de_DAGs.pdf#page=4" class="citation-link" target="_blank">[fonte]</a></p>
+            </section>
+            
+            <section>
+                <h2>Padrão de Design: Abstração e Polimorfismo</h2>
+                <p>O núcleo do design para bancos de dados relacionais é uma Classe Base Abstrata (ABC), que define um "contrato" comum para todos os conectores.</p>
+                <dl>
+                    <dt>Classe <code>DatabaseConnector(ABC)</code></dt>
+                    <dd>
+                        Esta classe abstrata define a interface e a lógica compartilhada. O job principal de ingestão interage com esta interface, sem precisar conhecer os detalhes específicos de cada banco.
+                        <ul>
+                            <li><strong>Abstração:</strong> Métodos como <code>get_data</code> e <code>get_schema</code> são definidos aqui, garantindo que todo conector terá essas funcionalidades. O construtor <code>__init__</code> centraliza a lógica de configuração de credenciais e a construção da URL JDBC.</li>
+                            <li><strong>Polimorfismo:</strong> O método <code>query_parcial</code> é um exemplo claro de polimorfismo. Embora o job de ingestão chame o mesmo método, a implementação da query de filtro por data é diferente em cada classe filha (<code>PostgresConnector</code>, <code>OracleConnector</code>), respeitando a sintaxe SQL específica de cada banco.</li>
+                        </ul>
+                    </dd>
+                </dl>
+                <figure>
+                    <figcaption>Estrutura de Herança dos Conectores Relacionais</figcaption>
+                    <pre><code>            DatabaseConnector (ABC)
+                /      |      \
+               /       |       \
+PostgresConnector  SqlConnector  OracleConnector
+                    </code></pre>
+                </figure>
+            </section>
+
+            <section>
+                <h2>Implementação dos Conectores</h2>
+                <p>O módulo fornece duas categorias de conectores com implementações distintas.</p>
+                 <dl>
+                    <dt>Conectores de Bancos de Dados Relacionais (JDBC)</dt>
+                    <dd>
+                        As classes <code>PostgresConnector</code>, <code>SqlConnector</code>, e <code>OracleConnector</code> herdam de <code>DatabaseConnector</code>. Elas utilizam o leitor JDBC nativo do Spark (<code>spark.read.format("jdbc")</code>) para extrair dados de forma distribuída.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> A lógica para construir a URL JDBC e para buscar metadados do esquema é encapsulada na classe base, enquanto a sintaxe SQL específica de cada dialeto é implementada nas classes filhas.
+                    </dd>
+                    <dt>Conector BigQuery</dt>
+                    <dd>
+                        A classe <code>BigQueryConnector</code> é uma implementação separada, pois interage com o BigQuery através de suas próprias APIs e do conector Spark-BigQuery, não via JDBC. Ela oferece um conjunto abrangente de métodos para operações de metadados, leitura, escrita e lógica de carga incremental para o BigQuery, que é o destino final dos dados.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>
+                    </dd>
+                </dl>
+            </section>
+
+        </article>
+    </main>
+</body>
+</html>

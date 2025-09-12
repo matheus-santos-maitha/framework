@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: migracao_tabelas_silver.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html" class="active">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Módulo da Camada Silver (<code>migracao_tabelas_silver.py</code>)</h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>O código <code>migracao_tabelas_silver.py</code> contém a lógica de orquestração para a materialização de tabelas na camada <strong>Silver</strong> do BigQuery. Ele representa a implementação da tarefa <code>update_{prefixo}{table_name}</code>, que, conforme a documentação, é a etapa responsável por processar dados da camada Bronze e migrá-los para a Silver.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a> O script é parametrizável e integra-se diretamente com o sistema de validação e monitoramento do framework.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+            </section>
+
+            <section>
+                <h2>Fluxo de Execução e Lógica de Negócio</h2>
+                <p>A função <code>update_table</code> encapsula um fluxo de trabalho completo para a atualização de uma tabela na camada Silver.</p>
+                <details>
+                    <summary>Etapas do Processo de Atualização</summary>
+                    <ol>
+                        <li><strong>Leitura da Lógica SQL:</strong> A lógica de transformação de negócio é carregada de um arquivo <code>.sql</code> externo.</li>
+                        <li><strong>Validação Pré-Execução (Quality Gate):</strong> O script invoca <code>validation.dat_updated_created</code> para uma checagem de qualidade. Se um problema é detectado, uma notificação de <strong>"warning"</strong> é enviada.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                        <li><strong>Seleção da Estratégia de Carga:</strong> Com base no parâmetro <code>upsert</code>, escolhe entre uma carga completa ou incremental.</li>
+                        <li><strong>Execução em BigQuery:</strong> A query SQL é executada contra o BigQuery.</li>
+                        <li><strong>Tratamento de Exceções:</strong> Um bloco <code>try...except</code> captura falhas na execução. Em caso de falha, uma notificação de <strong>"erro"</strong> é enviada.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                    </ol>
+                </details>
+            </section>
+
+            <section>
+                <h2>Estratégias de Carga de Dados</h2>
+                <p>O script implementa duas estratégias distintas para carregar dados no BigQuery, controladas pelo parâmetro <code>upsert</code>. Esta funcionalidade está diretamente ligada aos "Pontos de atenção" da documentação da Fábrica de DAGs.<a href="sources/Fabrica_de_DAGs.pdf#page=3" class="citation-link" target="_blank">[fonte]</a></p>
+
+                <figure>
+                    <figcaption>Lógica de Seleção da Estratégia de Carga</figcaption>
+                    <pre><code>if upsert is None:
+    print('Write Truncate')
+    gbq_hook.run_query(..., write_disposition='WRITE_TRUNCATE', ...)
+else:
+    print('Upsert')
+    bigquery_task = BigQueryExecuteQueryOperator(...)
+    result = bigquery_task.execute(context=kwargs)</code></pre>
+                </figure>
+                
+                <dl>
+                    <dt>Carga Completa (<code>WRITE_TRUNCATE</code>)</dt>
+                    <dd>
+                        Este é o comportamento padrão. A disposição <code>WRITE_TRUNCATE</code> instrui o BigQuery a apagar atomicamente todo o conteúdo da tabela de destino e inserir o resultado da nova query.
+                    </dd>
+
+                    <dt>Carga Incremental / Upsert</dt>
+                    <dd>
+                        Quando <code>upsert=true</code> é definido no YAML, o script utiliza o <code>BigQueryExecuteQueryOperator</code>. Nesta modalidade, espera-se que o arquivo <code>.sql</code> contenha uma instrução <code>MERGE</code> ou outra lógica DML para realizar a inserção e/ou atualização de registros.<a href="sources/Fabrica_de_DAGs.pdf#page=3" class="citation-link" target="_blank">[fonte]</a>
+                    </dd>
+                </dl>
+            </section>
+
+        </article>
+    </main>
+
+</body>
+</html>

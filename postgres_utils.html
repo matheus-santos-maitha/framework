@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: postgres_utils.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html" class="active">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Módulo <code>postgres_utils.py</code></h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>O código <code>postgres_utils.py</code> define a classe <code>PostgresExecutor</code>, que serve como uma interface de alto nível para interações com bancos de dados PostgreSQL. Esta classe é uma implementação direta do objetivo do framework de fornecer uma "única interface para realização de conexão com os bancos de dados", especificamente para o Postgre.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Ela utiliza as melhores práticas de integração com o Airflow e gerenciamento de transações.</p>
+            </section>
+
+            <section>
+                <h2>Análise de Padrões de Design e Funcionalidades</h2>
+
+                <dl>
+                    <dt>Padrão Gerenciador de Contexto (Context Manager)</dt>
+                    <dd>
+                        A classe é projetada para ser utilizada com a instrução <code>with</code> do Python, através da implementação dos métodos <code>__enter__</code> e <code>__exit__</code>. Este padrão promove um <strong>gerenciamento automático de recursos</strong>, tornando o código que o utiliza mais limpo e menos propenso a vazamentos de conexão.
+                    </dd>
+
+                    <dt>Gerenciamento de Conexões e Transações</dt>
+                    <dd>
+                        A robustez do módulo reside em seu gerenciamento de conexões e transações.
+                        <ul>
+                            <li><strong>Integração com Airflow Hooks:</strong> A conexão não é criada manualmente. Ela utiliza <code>PostgresHook</code>, o mecanismo padrão do Airflow para se conectar a bancos. Isso significa que as credenciais são lidas de forma segura a partir do Metastore do Airflow.</li>
+                            <li><strong>Garantia de Atomicidade (ACID):</strong> O método <code>__exit__</code> contém uma lógica transacional crítica. Se nenhuma exceção ocorreu, a transação é confirmada (<code>commit</code>); caso contrário, é revertida (<code>rollback</code>). Isso garante a <strong>atomicidade</strong> das operações, mantendo a integridade dos dados no banco.</li>
+                        </ul>
+                    </dd>
+                    
+                    <dt>Abstração de Operações SQL</dt>
+                    <dd>
+                        A classe fornece métodos que abstraem o trabalho repetitivo de interagir com o cursor, como <code>truncate_table</code>, <code>fetch_all</code>, e <code>fetch_one</code>. O suporte a parâmetros (<code>params</code>) em <code>execute_query</code> permite o uso de queries parametrizadas, uma prática essencial para a <strong>prevenção de ataques de SQL Injection</strong>.
+                    </dd>
+                </dl>
+            </section>
+            
+            <section>
+                <h2>Exemplo de Utilização Prática</h2>
+                <figure>
+                    <figcaption>Exemplo de execução de uma query de leitura</figcaption>
+                    <pre><code># with PostgresExecutor(postgres_conn_id='postgres_credit') as postgres:
+#     results = postgres.fetch_all("SELECT * FROM acordos_recupera_fonte")</code></pre>
+                </figure>
+                <p>Neste contexto, o <code>PostgresExecutor</code> seria a ferramenta utilizada por DAGs como <code>CARGA_ACORDOS_RECUPERA_FONTE</code> para realizar operações de escrita e atualização nas tabelas PostgreSQL mencionadas na documentação.<a href="sources/CARGA_ACORDOS_RECUPERA_FONTE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+            </section>
+
+        </article>
+    </main>
+</body>
+</html>

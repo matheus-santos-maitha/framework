@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: manage_dataframe.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html" class="active">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Módulo <code>manage_dataframe.py</code></h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>O script <code>manage_dataframe.py</code> é um módulo utilitário central do framework, projetado para encapsular operações complexas de manipulação de DataFrames PySpark. Sua principal responsabilidade é gerenciar a persistência de dados no BigQuery de forma robusta e inteligente, além de fornecer ferramentas para a padronização de esquemas, sendo um componente fundamental para os processos de ETL entre as camadas <strong>Bronze e Silver</strong>.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+            </section>
+            
+            <section>
+                <h2>Gerenciamento e Tradução de Esquemas</h2>
+                <p>O módulo implementa um "tradutor" de esquemas entre os ecossistemas PySpark e BigQuery, uma funcionalidade crítica para a automação da criação de tabelas.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+                <dl>
+                    <dt>Funções <code>spark_type_to_bq_type_str</code> e <code>spark_schema_to_bq_schema</code></dt>
+                    <dd>
+                        Essas funções convertem um objeto <code>StructType</code> do PySpark em uma lista de objetos <code>bigquery.SchemaField</code>, que é o formato exigido pela API do BigQuery. A implementação é notável por sua capacidade de lidar com estruturas de dados complexas de forma recursiva:
+                        <ul>
+                            <li><strong>Tipos Primitivos:</strong> Mapeia corretamente tipos como <code>StringType</code> para <code>"STRING"</code> e <code>IntegerType</code> para <code>"INTEGER"</code>.</li>
+                            <li><strong>Tipos Aninhados (Structs):</strong> Converte um <code>StructType</code> aninhado em um campo <code>RECORD</code> no BigQuery.</li>
+                            <li><strong>Tipos Repetidos (Arrays):</strong> Converte um <code>ArrayType</code> em um campo com modo <code>REPEATED</code> no BigQuery.</li>
+                        </ul>
+                    </dd>
+                </dl>
+            </section>
+
+            <section>
+                <h2>Lógica de Persistência em BigQuery</h2>
+                <p>A função <code>save_dataframe_bq</code> é o componente mais importante do módulo, implementando uma lógica de escrita em BigQuery que é resiliente a alterações de esquema (schema drift).</p>
+                <dl>
+                    <dt>Criação de Tabela (Table Creation)</dt>
+                    <dd>Se a tabela de destino não existir no BigQuery, a função utiliza as rotinas de tradução de esquema para criar a tabela dinamicamente, garantindo que ela corresponda perfeitamente à estrutura do DataFrame de entrada.</dd>
+
+                    <dt>Reconciliação de Esquema (Schema Reconciliation)</dt>
+                    <dd>
+                        Se a tabela já existir, a função executa um processo robusto de reconciliação para evitar falhas de escrita:
+                        <details>
+                            <summary>Etapas do Processo de Reconciliação</summary>
+                            <ol>
+                                <li><strong>Adição de Colunas Ausentes:</strong> Colunas que existem no BigQuery mas não no DataFrame de entrada são adicionadas a ele com valor <code>NULL</code>.</li>
+                                <li><strong>Conversão de Tipos (Casting):</strong> Colunas que existem em ambos, mas com tipos de dados diferentes, são convertidas (cast) no DataFrame para corresponder ao tipo de dado da coluna no BigQuery.</li>
+                                <li><strong>Remoção de Colunas Adicionais:</strong> Colunas que existem no DataFrame mas não no BigQuery são implicitamente removidas, pois a seleção final de colunas é baseada no esquema do BigQuery.</li>
+                            </ol>
+                        </details>
+                    </dd>
+                </dl>
+            </section>
+            
+            <section>
+                <h2>Padronização e Refatoração de Esquemas</h2>
+                <p>O módulo contém lógica para impor um padrão de nomenclatura e tipagem de colunas, uma etapa crucial na transformação de dados para a camada Silver.<a href="sources/Deletes_Fisico_e_Logicos.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+                 <dl>
+                    <dt>Função <code>apply_refactory_columns</code></dt>
+                    <dd>
+                        Esta função atua como um motor de padronização. Ela utiliza expressões regulares para identificar padrões nos nomes das colunas e, com base neles, renomeia e converte o tipo de dado da coluna de acordo com um dicionário de regras pré-definidas.
+                        <figure>
+                            <figcaption>Exemplo de Regras de Padronização</figcaption>
+                            <pre><code>naming_rules = {
+    "NAM_": StringType(),  # Colunas com "name"
+    "COD_": IntegerType(), # Colunas com "code" ou "id"
+    "DAT_": DateType(),    # Colunas com "date"
+    "TMS_": TimestampType(),# Colunas com "timestamp"
+    "VAL_": FloatType(),   # Colunas com "value"
+    ...
+}</code></pre>
+                        </figure>
+                        Esta automação garante que os dados na camada Silver sejam consistentes, previsíveis e prontos para o consumo analítico.
+                    </dd>
+                </dl>
+            </section>
+        </article>
+    </main>
+</body>
+</html>

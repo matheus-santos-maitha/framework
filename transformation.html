@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: transformation.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html" class="active">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Módulo <code>transformation.py</code></h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>O código <code>transformation.py</code> é um módulo de utilitários PySpark projetado para a etapa de transformação (o "T" do ETL) nos pipelines de dados. As funções contidas neste script realizam operações de enriquecimento, limpeza e carregamento de lógica, sendo aplicadas principalmente na movimentação de dados entre as camadas <strong>Bronze e Silver</strong>.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+            </section>
+
+            <section>
+                <h2>Análise Funcional Detalhada</h2>
+
+                <dl>
+                    <dt>Funções de Enriquecimento e Padronização de Dados</dt>
+                    <dd>
+                        Este conjunto de funções prepara os dados para a camada Bronze, adicionando metadados e garantindo a conformidade do esquema.
+                        <ul>
+                            <li><strong><code>set_ingestion_date(df)</code>:</strong> Adiciona as colunas <code>TMS_INGESTION</code> (timestamp) e <code>DAT_INGESTION</code> (data) ao DataFrame. Esta é uma prática padrão para registrar quando um dado foi ingerido no Data Lake.</li>
+                            <li><strong><code>round_df(df)</code>:</strong> Itera sobre as colunas de um DataFrame e arredonda os tipos <code>decimal</code> para garantir a compatibilidade com o tipo de dado <code>NUMERIC</code> do BigQuery.</li>
+                            <li><strong><code>remove_invalid_char(df)</code>:</strong> Realiza a limpeza dos nomes das colunas, removendo caracteres especiais para prevenir erros de compatibilidade.</li>
+                        </ul>
+                    </dd>
+
+                    <dt>Carregamento Dinâmico de Lógica de Extração</dt>
+                    <dd>
+                        A função <code>get_script(args)</code> implementa um padrão de design poderoso. Ela externaliza a lógica de extração (queries SQL) do código PySpark, carregando um arquivo <code>.sql</code> de um caminho no GCS. Esta capacidade de executar scripts SQL externos é uma funcionalidade gerenciada pela "Fábrica de DAGs".<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a>
+                        <p class="note" style="font-style: italic; color: #555; border-left: 3px solid var(--secondary-color); padding-left: 1em; margin-top: 1em;"><strong>Mecanismo de Fallback:</strong> Uma característica importante é o bloco <code>try...except</code>. Se um script SQL customizado não for encontrado, a função retorna uma query padrão (<code>select * from {table_origem}</code>), tornando o framework robusto.
+                        </p>
+                    </dd>
+
+                    <dt>Funções Utilitárias e de Lógica de Negócio</dt>
+                    <dd>
+                        Este grupo contém funções auxiliares e exemplos de transformações mais complexas.
+                        <ul>
+                            <li><strong><code>retorna_lista_anome(args)</code>:</strong> É uma função utilitária que gera uma lista de tuplas (ano, mês) entre duas datas, comumente utilizada para processamento em lote de dados particionados.</li>
+                            <li><strong>Código Comentado:</strong> Funções como <code>transform_data_schema</code> (que parseia JSON) e <code>aggregate_and_join</code> (que aplica desduplicação) são exemplos de transformações mais elaboradas, típicas do processamento da camada Bronze para a Silver, orquestrado pela tarefa <code>update_{prefixo}{table_name}</code>.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></li>
+                        </ul>
+                    </dd>
+                </dl>
+            </section>
+
+        </article>
+    </main>
+
+</body>
+</html>

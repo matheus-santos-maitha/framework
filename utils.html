@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: Código do Framework Principal</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
+    
+    <main>
+        <article>
+            <header>
+                <h1>Análise Aprofundada do Código do Framework Principal</h1>
+            </header>
+            
+            <p>Este script Python constitui a espinha dorsal técnica para a execução das DAGs gerenciadas pela "Fábrica de DAG's".<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Ele não contém a lógica de negócio do ETL, mas fornece toda a infraestrutura de código necessária para configurar o ambiente de execução, gerenciar a segurança e submeter os trabalhos de processamento de dados.</p>
+
+            <section>
+                <h2>1. Análise Detalhada das Configurações Globais</h2>
+
+                <h3>Análise Detalhada do <code>CLUSTER_CONFIG</code></h3>
+
+                <p>Este objeto é a especificação técnica do ambiente de processamento distribuído com Spark, mencionado no documento "Framework Engenharia de Dados".<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Cada parâmetro tem um propósito específico para a eficiência, custo e segurança do framework:</p>
+
+                <ul>
+                    <li><strong><code>autoscaling_policy=...</code></strong>: Aponta para uma política de autoescalonamento, permitindo que o cluster adicione ou remova nós dinamicamente, uma implementação direta da otimização de custos e uso de recursos.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><strong><code>num_preemptible_workers=5</code>, <code>preemptibility="PREEMPTIBLE"</code></strong>: Estratégia de otimização de custos agressiva, utilizando máquinas virtuais de custo muito mais baixo.</li>
+                    <li><strong><code>auto_delete_ttl=7200</code></strong>: Configura o cluster para autodestruição após 2 horas. Isso implementa o conceito de cluster efêmero, onde o recurso é criado no início da DAG e destruído ao final, garantindo que não haja custos com recursos ociosos.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                </ul>
+            </section>
+            
+            <section>
+                <h2>2. Análise Detalhada das Funções Utilitárias</h2>
+
+                <p>Estas funções abstraem a complexidade e promovem a reutilização de código, um dos objetivos do framework.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></p>
+
+                <h3>Função <code>get_secret_manager(...)</code></h3>
+
+                <p>Esta função é a implementação prática do pilar de "Segurança" descrito na documentação da "Fábrica de DAG's".<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+                <ul>
+                    <li><strong>Mecanismo de Segurança</strong>: A função busca informações sensíveis diretamente do Google Secret Manager no momento da execução.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><strong>Comunicação Inter-tarefas (XCom)</strong>: A linha <code>ti.xcom_push(key='secret', value=secret)</code> utiliza o mecanismo XCom do Airflow para que a credencial recuperada possa ser utilizada por tarefas subsequentes na mesma DAG.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></li>
+                </ul>
+
+                <h3>Função <code>job_dag(...)</code></h3>
+                <p>Esta função atua como uma "fábrica de jobs", construindo a configuração para submeter um job PySpark ao Dataproc.</p>
+                <ul>
+                    <li><strong>Conectividade Multi-Banco</strong>: A chave <code>jar_file_uris</code> inclui drivers JDBC para PostgreSQL, Oracle e SQL Server. Isso equipa o ambiente Spark com a capacidade de se conectar a essas fontes de dados, alinhado ao objetivo do framework de fornecer uma interface para conexão com Oracle e Postgre.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                </ul>
+            </section>
+            
+            <section>
+                <h2>3. Fluxo de Execução Implícito em uma DAG</h2>
+                <p>Analisando o código, podemos inferir o fluxo completo de uma tarefa de ETL, que corresponde ao fluxo descrito na documentação da "Fábrica de DAGs":<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></p>
+                <ol>
+                    <li><strong>Início da DAG</strong>: O processo é iniciado (<code>init_task</code>).<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><strong>Busca de Credenciais</strong>: A função <code>get_secret_manager</code> é executada para buscar as credenciais no Google Secret Manager e armazená-las no XCom.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><strong>Criação do Cluster</strong>: Um cluster Dataproc é criado com a configuração especificada.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><strong>Submissão do Job PySpark</strong>: O job PySpark executa a extração e transformação dos dados para as camadas Bronze e Silver.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><strong>Finalização e Limpeza</strong>: Após a conclusão, o cluster Dataproc é deletado, liberando os recursos.<a href="sources/Fabrica_de_DAGs.pdf#page=3" class="citation-link" target="_blank">[fonte]</a> A DAG chega ao seu ponto final (<code>end_task</code>).</li>
+                </ol>
+            </section>
+        </article>
+    </main>
+</body>
+</html>

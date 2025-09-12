@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: validation.py</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Estilo para o link de citação */
+        a.citation-link {
+            font-size: 0.8em;
+            vertical-align: super;
+            text-decoration: none;
+            color: var(--secondary-color, #3498db);
+            font-weight: bold;
+            margin-left: 4px;
+            border: 1px solid var(--light-gray, #ecf0f1);
+            padding: 1px 5px;
+            border-radius: 4px;
+        }
+        a.citation-link:hover {
+            text-decoration: none;
+            background-color: var(--secondary-color, #3498db);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
+            <li><a href="utils_vm.html">utils_vm.py</a></li>
+            <li><a href="environment.html">environment.py</a></li>
+            <li><a href="utils.html">utils.py</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html" class="active">validation.py</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica Aprofundada: Módulo <code>validation.py</code></h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da Arquitetura</h2>
+                <p>O código apresentado corresponde ao script <code>validation.py</code>, o módulo responsável por executar checagens de qualidade nos dados e enviar notificações de "warning" para um chat do Google, conforme descrito na documentação de monitoramento.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+            </section>
+
+            <section>
+                <h2>Análise dos Componentes do Código</h2>
+                
+                <h3>Funções de Validação de Dados</h3>
+                <p>O script contém várias funções cujo objetivo é validar a consistência e a qualidade dos dados. As falhas nessas validações são classificadas como "warnings" do processo.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+                <ul>
+                    <li><code>qtd_rows_validation(args)</code>: Corresponde à "validação de quantidade registros na origem".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><code>chk_qty_columns(args)</code>: Corresponde à "validação de quantidade colunas".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Se houver divergência, a função identifica e retorna quais colunas são diferentes.</li>
+                    <li><code>validate_date(df)</code>: Valida se os dados em colunas do tipo data seguem o padrão esperado.</li>
+                    <li><code>dat_updated_created(tb_name)</code>: Valida a consistência lógica entre campos de data de criação e atualização.</li>
+                    <li><strong>Funções Comentadas (<code>row_duplicity</code>, <code>is_duplicated</code>)</strong>: O código inclui lógica para verificação de "dados duplicados", que é uma das validações mencionadas na documentação.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                </ul>
+
+                <h3>Função de Notificação</h3>
+                <ul>
+                    <li><code>send_message_chat(args)</code>: Esta função é explicitamente nomeada na documentação como o "Método chamado send_message_chat que fica no código validation.py".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Ela é utilizada para enviar notificações de "warning" para um chat específico do Google, cuja URL é passada como parâmetro.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                </ul>
+            </section>
+
+        </article>
+    </main>
+
+</body>
+</html>
