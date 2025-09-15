@@ -9,41 +9,120 @@
 <body>
 
     <nav>
-    <h2>Módulos do Framework</h2>
-
-    <h4>Infraestrutura e Ambiente</h4>
-    <ul>
+        <h2>Módulos do Framework</h2>
+        <h4>Infraestrutura e Ambiente</h4>
+        <ul>
             <li><a href="utils_vm.html">utils_vm.py</a></li>
             <li><a href="environment.html">environment.py</a></li>
-            <li><a href="utils.html">utils.py</a></li>
-    </ul>
-
-    <h4>Conectores e Acesso a Dados</h4>
-    <ul>
-        <li><a href="connector.html">connector.py</a></li>
-        <li><a href="postgres_utils.html">postgres_utils.py</a></li>
-        <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
-    </ul>
-
-    <h4>Lógica ETL Principal</h4>
-    <ul>
-        <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
-        <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
-    </ul>
-
-    <h4>Bibliotecas Utilitárias</h4>
-    <ul>
-        <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
-        <li><a href="transformation.html">transformation.py</a></li>
-        <li><a href="validation.html">validation.py</a></li>
-    </ul>
-</nav>
+            <li><a href="framework_core.html">framework_core.py (Análise Original)</a></li>
+        </ul>
+        <h4>Conectores e Acesso a Dados</h4>
+        <ul>
+            <li><a href="connector.html">connector.py</a></li>
+            <li><a href="postgres_utils.html">postgres_utils.py</a></li>
+            <li><a href="bigquery_utils.html">bigquery_utils.py</a></li>
+        </ul>
+        <h4>Lógica ETL Principal</h4>
+        <ul>
+            <li><a href="migracao_bronze.html">migracao_tabelas_bronze.py</a></li>
+            <li><a href="migracao_silver.html">migracao_tabelas_silver.py</a></li>
+        </ul>
+        <h4>Bibliotecas Utilitárias</h4>
+        <ul>
+            <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
+            <li><a href="transformation.html">transformation.py</a></li>
+            <li><a href="validation.html">validation.py</a></li>
+        </ul>
+    </nav>
 
     <main>
         <article>
-            <h1>Documentação Técnica do Framework de Dados</h1>
-            <p>Bem-vindo à documentação técnica do framework de dados. Este projeto consolida as análises aprofundadas de cada módulo Python que compõe o framework.</p>
-            <p>Utilize o menu lateral para navegar entre as análises de cada arquivo.</p>
+            <header>
+                <h1>Automatizado. Escalável. Unificado.</h1>
+            </header>
+
+            <div class="hero-container">
+                <div class="text-column">
+                    <h3>Que problema ele resolve?</h3>
+                    <p>O framework foi criado para resolver os desafios de criar e manter pipelines de dados individualmente, o que resultava em duplicação de código e alta complexidade de manutenção.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Ele centraliza a lógica de ingestão, reduzindo o tempo de desenvolvimento e garantindo a padronização dos processos de ETL.</p>
+                    
+                    <h3>Por que fizemos o framework?</h3>
+                    <p>Fizemos o framework para estabelecer uma base única e unificada para todos os dados da organização, desde a extração em fontes diversas (Oracle, Postgre) até a disponibilização nas camadas Bronze e Silver.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> O objetivo é simplificar e acelerar a entrega de dados confiáveis, permitindo que a empresa se torne mais orientada a dados.</p>
+
+                    <h3>Como usamos a tecnologia para resolver o problema?</h3>
+                    <p>Utilizamos uma combinação de tecnologias para criar uma solução robusta: <strong>Apache Airflow</strong> para orquestração, <strong>YAML</strong> para configuração declarativa de pipelines, e <strong>Apache Spark</strong> (via Dataproc) para o processamento distribuído de grandes volumes de dados.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> O <strong>BigQuery</strong> serve como nosso destino final, e o <strong>Google Secret Manager</strong> garante a segurança das credenciais.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+                </div>
+
+                <div class="diagram-column">
+                    <div class="diagram">
+                        <h4>Fontes de Dados</h4>
+                        <div class="diagram-box">Oracle, PostgreSQL, SQL Server</div>
+                        <div class="diagram-arrow">↓</div>
+                        <div class="diagram-box core">
+                            <strong>Framework de Ingestão</strong>
+                            <small>(Airflow + Spark no Dataproc)</small>
+                        </div>
+                        <div class="diagram-arrow">↓</div>
+                        <h4>Destino (Data Lakehouse)</h4>
+                        <div class="diagram-box">BigQuery (Camadas Bronze, Silver, Gold)</div>
+                    </div>
+                </div>
+            </div>
+            <section style="border-left: none; padding-left: 0;">
+            <h2 style="margin-top: 3rem; text-align: center; border-bottom: 3px solid var(--secondary-color); padding-bottom: 0.5em;">Fluxos de Arquitetura</h2>
+            
+            <div style="display: flex; gap: 2rem; align-items: flex-start;">
+                
+                <div style="flex: 1;">
+                    <h3>Fluxo 1: Ingestão de Dados (Fábrica de DAGs)</h3>
+                    <ol>
+                        <li>
+                            <strong>Orquestrador (Airflow):</strong> Lê um arquivo de configuração <code>YAML</code> que define as tabelas e os parâmetros do processo.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                        <li>
+                            <strong>Provisionamento (GCP):</strong> Cria um cluster Dataproc temporário com o "shape" (tipo de VM, nº de workers) especificado no YAML.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                        <li>
+                            <strong>Segurança (GCP):</strong> Busca as credenciais de acesso ao banco de dados de forma segura no Google Secret Manager.<a href="sources/Fabrica_de_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                        <li>
+                            <strong>Execução (Dataproc):</strong> Submete um job PySpark (ex: <code>migracao_tabelas_bronze.py</code>) para o cluster.
+                        </li>
+                        <li>
+                            <strong>Extração (Conectores):</strong> O job PySpark utiliza os conectores para ler os dados da fonte (Oracle, Postgre, etc.) de forma distribuída.<a href="sources/Framework_Engenharia_de_Dados.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                        <li>
+                            <strong>Carga (BigQuery):</strong> Os dados processados e transformados são salvos na camada Bronze do BigQuery.<a href="sources/Fabrica_de_DAGs.pdf#page=2" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                        <li>
+                            <strong>Limpeza (GCP):</strong> Ao final do processo, o cluster Dataproc é automaticamente deletado para otimizar custos.<a href="sources/Fabrica_de_DAGs.pdf#page=3" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                    </ol>
+                </div>
+                
+                <div style="flex: 1;">
+                    <h3>Fluxo 2: Atualização de Relatórios (SQL Puro)</h3>
+                     <ol>
+                        <li>
+                            <strong>Orquestrador (Airflow):</strong> Uma DAG de relatório (ex: <code>RELATORIO_NF_PORTAL_JDE</code>) é acionada por agendamento.
+                        </li>
+                        <li>
+                            <strong>Leitura da Lógica (Airflow):</strong> O Airflow lê a consulta a partir de um arquivo <code>.sql</code> armazenado no projeto.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                        <li>
+                            <strong>Execução (BigQuery):</strong> A query SQL é enviada diretamente para o motor do BigQuery para ser executada, utilizando um <code>BigQueryHook</code>.<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                        <li>
+                            <strong>Materialização (BigQuery):</strong> O resultado da query é salvo em uma tabela de destino, também no BigQuery, que servirá de fonte para um relatório (ex: no Looker Studio).<a href="sources/Relatorio_NF_Portal_JDE.pdf#page=1" class="citation-link" target="_blank">[fonte]</a>
+                        </li>
+                    </ol>
+                </div>
+
+            </div>
+        </section>
+
+            <p style="margin-top: 2rem;">Utilize o menu lateral para navegar entre as análises detalhadas de cada módulo que compõe o framework.</p>
+
         </article>
     </main>
 
