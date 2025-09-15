@@ -157,3 +157,12 @@ a.citation-link:hover {
     font-size: 0.9em;
     letter-spacing: 1px;
 }
+a.nav-header-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: color 0.3s;
+}
+a.nav-header-link:hover h2 {
+    color: var(--secondary-color);
+}
