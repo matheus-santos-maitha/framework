@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análise: DAG UPDATE_RELATORIO_INDICADORES_SUSTENTACAO</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --background-color: #f8f9f9;
+            --main-bg-color: #ffffff;
+            --border-color: #e5e7e9;
+            --text-color: #34495e;
+            --code-bg-color: #ecf0f1;
+            
+            /* ===== ESTILO DO BLOCO DE SQL REVISADO ===== */
+            --sql-code-bg-color: #f4f6f6;   /* Fundo cinza claro, seguro */
+            --sql-code-text-color: #2c3e50; /* Texto escuro, legível */
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+            margin: 0;
+            display: flex;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        nav {
+            width: 280px;
+            background-color: var(--main-bg-color);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+        }
+        nav h2, nav h4 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 10px;
+        }
+        nav a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            display: block;
+            padding: 8px 0;
+            transition: color 0.2s;
+        }
+        nav a:hover {
+            color: var(--primary-color);
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        nav ul li a {
+            padding-left: 15px;
+        }
+        nav ul li a.active {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        main {
+            margin-left: 320px;
+            padding: 20px 40px;
+            width: calc(100% - 320px);
+        }
+        article header h1 {
+            color: var(--primary-color);
+            font-size: 2.2em;
+        }
+        section h2 {
+            color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 40px;
+        }
+        section h3 {
+            color: var(--secondary-color);
+        }
+        p, dd, li {
+            line-height: 1.6;
+            text-align: justify;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--code-bg-color);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        dl dt {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 15px;
+        }
+        dl dd {
+            margin-left: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        ul.recommendations li {
+            margin-bottom: 10px;
+        }
+        ul.recommendations strong {
+            color: var(--secondary-color);
+        }
+        .tag {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            margin: 0 2px;
+        }
+        .tech-sheet-container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+        .flow-diagram {
+            flex: 1;
+            text-align: center;
+        }
+        .tech-sheet {
+            flex: 1.5;
+            background-color: #fdfefe;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0 20px;
+        }
+        .flow-start, .flow-task {
+            background-color: var(--main-bg-color);
+            border: 2px solid var(--secondary-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 0 auto 10px auto;
+            max-width: 200px;
+        }
+        .flow-start {
+             background-color: #d6eaf8;
+        }
+        .flow-arrow {
+            font-size: 2em;
+            color: var(--primary-color);
+        }
+        .parallel-tasks {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 10px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .parallel-tasks .flow-task {
+            font-size: 0.8em;
+            padding: 8px;
+            min-width: 150px;
+        }
+        details {
+            margin-top: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #f2f4f4;
+        }
+        
+        /* ===== ESTILO DO BLOCO DE CÓDIGO SQL REFEITO ===== */
+        details pre {
+            background-color: var(--sql-code-bg-color);
+            color: var(--sql-code-text-color);
+            padding: 15px;
+            border-radius: 0 0 4px 4px;
+            overflow-x: auto;
+            font-size: 0.9em;
+            line-height: 1.5; /* Melhora o espaçamento entre linhas */
+            white-space: pre-wrap; /* Garante a quebra de linha correta */
+        }
+        
+        /* Remove qualquer estilo conflitante dos filhos, mas não é mais a principal estratégia */
+        details pre code > * {
+            background: none !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="#top" style="text-decoration: none;"><h2>Documentação de DAGs</h2></a>
+        
+        <h4>Relatórios e BI</h4>
+        <ul>
+            <li><a href="#top" class="active">UPDATE_RELATORIO_INDICADORES_SUSTENTACAO</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <article>
+            <header>
+                <h1>Análise Técnica da DAG: <code>UPDATE_RELATORIO_INDICADORES_SUSTENTACAO</code></h1>
+            </header>
+
+            <section>
+                <h2>Visão Geral da DAG</h2>
+                <p>Esta DAG é responsável por atualizar as tabelas de dados que servem de base para o <strong>Relatório de Indicadores de Sustentação</strong>. O processo consiste em executar queries de atualização em duas tabelas principais: uma com dados operacionais (<code>REL_SUSTENTACAO_OPER</code>) e outra com dados cadastrais (<code>REL_SUSTENTACAO_CAD</code>).</p>
+                <p>Como parte de um processo de <strong>migração de ambiente</strong>, a DAG atualiza as tabelas em dois projetos BigQuery simultaneamente, garantindo a consistência dos dados durante o período de transição.</p>
+                <ul>
+                    <li><strong>Owner:</strong> BI Team</li>
+                    <li><strong>Schedule:</strong> Diariamente às 06:05 (fuso de São Paulo)</li>
+                    <li><strong>Tags:</strong> <span class="tag">relatorio</span> <span class="tag">bi</span> <span class="tag">consumption</span> <span class="tag">migracao</span></li>
+                </ul>
+            </section>
+            
+            <section>
+                <h2>Arquitetura e Detalhamento das Tarefas</h2>
+                <p>A arquitetura da DAG é baseada em um modelo de <strong>execução paralela</strong>. Todas as quatro tarefas são disparadas simultaneamente. Abaixo, o detalhamento de cada uma.</p>
+                
+                <dl>
+                    <dt><code>update_table_operations_legacy</code></dt>
+                    <dd>
+                        <strong>Objetivo:</strong> Atualiza a tabela de dados operacionais no ambiente legado. Esta query agrega dados de títulos para calcular métricas financeiras e operacionais.
+                        <ul>
+                            <li><strong>Fonte de Dados:</strong> <code>trademaster-bi.TRT_TRADEMASTER.REF_TB_TM_TITULOS</code></li>
+                            <li><strong>Métricas Calculadas:</strong> <code>BOOKING</code> (valor líquido do título), <code>QTD_OPER</code> (operações únicas), <code>QTD_TIT</code> (títulos únicos).</li>
+                            <li><strong>Regras de Negócio:</strong> Processa uma janela móvel dos últimos 3 meses e exclui títulos que foram cancelados em até 24 horas.</li>
+                        </ul>
+                        <details>
+                            <summary>Visualizar a Query (UPDT_REL_SUSTENTACAO_OPER.sql)</summary>
+                            <pre><code>SELECT
+    DATA_EMISSAO,
+    CODIGO_CONVENIO_BROKER,
+    NOME_CONVENIO_BROKER,
+    CODIGO_CONVENIO_SELLER,
+    NOME_CONVENIO_SELLER,
+    CAST(ROUND(SUM(VALOR_TITULO - IFNULL(VALOR_DESCONTO_NOTA,0)),2) AS NUMERIC) AS BOOKING,
+    COUNT( DISTINCT CONCAT(CODIGO_CONVENIO_BROKER, CODIGO_CONVENIO_SELLER, NF, CNPJ_CLIENTE)) AS QTD_OPER,
+    COUNT( DISTINCT TITULO) AS QTD_TIT,
+    SISTEMA
+FROM `trademaster-bi.TRT_TRADEMASTER.REF_TB_TM_TITULOS`
+WHERE DATA_EMISSAO >= DATE_SUB(DATE_TRUNC(CURRENT_DATE('America/Sao_Paulo'), MONTH), INTERVAL 3 MONTH)
+AND IFNULL(FLAG_CANCELADO_24H,false) is false 
+GROUP BY 1,2,3,4,5,9</code></pre>
+                        </details>
+                    </dd>
+
+                    <dt><code>update_table_clients_legacy</code></dt>
+                    <dd>
+                        <strong>Objetivo:</strong> Atualiza a tabela de dados cadastrais no ambiente legado. A query contabiliza novos clientes (CNPJs únicos) por dia.
+                        <ul>
+                            <li><strong>Fontes de Dados:</strong> <code>...REF_TB_TM_CADASTROS</code> e <code>...TM_FRONERI_SELLER</code> para enriquecimento.</li>
+                            <li><strong>Métrica Calculada:</strong> <code>QTD_CAD</code> (quantidade de CNPJs distintos).</li>
+                            <li><strong>Regras de Negócio:</strong> Aplica uma lógica de tratamento especial para o convênio "FRONERI" e considera uma janela móvel dos últimos 3 meses.</li>
+                        </ul>
+                        <details>
+                            <summary>Visualizar a Query (UPDT_REL_SUSTENTACAO_CAD.sql)</summary>
+                            <pre><code>SELECT
+    DATA_ABERTURA,
+    IFNULL(FR.CODIGO_CONVENIO_BROKER,CODIGO_CONVENIO) AS CODIGO_CONVENIO,
+    CASE WHEN FR.CODIGO_CONVENIO_BROKER IS NOT NULL THEN 'FRONERI' ELSE NOME_CONVENIO END AS NOME_CONVENIO,
+    COUNT(DISTINCT CNPJ) AS QTD_CAD
+FROM `trademaster-bi.TRT_TRADEMASTER.REF_TB_TM_CADASTROS` AS CAD
+LEFT JOIN `trademaster-bi.RAW_DRIVE_COMPARTILHADO.TM_FRONERI_SELLER` AS FR
+ON FR.CODIGO_CONVENIO_SELLER = CAD.CODIGO_CONVENIO
+WHERE DATA_ABERTURA >= DATE_SUB(DATE_TRUNC(CURRENT_DATE('America/Sao_Paulo'), MONTH), INTERVAL 3 MONTH)
+GROUP BY 1,2,3</code></pre>
+                        </details>
+                    </dd>
+                    
+                    <dt><code>update_table_operations_prod</code></dt>
+                    <dd>
+                        <strong>Objetivo:</strong> Atualiza a tabela de dados operacionais no novo ambiente de produção.
+                        <br>
+                        <em>A lógica da query é idêntica à sua contraparte do ambiente legado, porém utiliza fontes de dados do projeto <code>trade-data-bi-dev</code>.</em>
+                    </dd>
+
+                    <dt><code>update_table_clients_prod</code></dt>
+                    <dd>
+                        <strong>Objetivo:</strong> Atualiza a tabela de dados cadastrais no novo ambiente de produção.
+                        <br>
+                        <em>A lógica da query é idêntica à sua contraparte do ambiente legado, porém utiliza fontes de dados do projeto <code>trade-data-bi-dev</code>.</em>
+                    </dd>
+                </dl>
+            </section>
+
+            <section>
+                <h2>Ficha Técnica e Fluxo de Execução</h2>
+                <p>Abaixo estão os principais parâmetros de configuração da DAG e um diagrama visual que ilustra seu fluxo de execução.</p>
+                <div class="tech-sheet-container">
+                    <div class="tech-sheet">
+                        <h3>Ficha Técnica da DAG</h3>
+                        <dl>
+                            <dt>DAG ID</dt>
+                            <dd><code>UPDATE_RELATORIO_INDICADORES_SUSTENTACAO</code></dd>
+                            
+                            <dt>Schedule (CRON)</dt>
+                            <dd><code>5 6 * * *</code> (Todos os dias às 06:05)</dd>
+                            
+                            <dt>Owner</dt>
+                            <dd>BI Team</dd>
+                            
+                            <dt>Notificação em caso de falha</dt>
+                            <dd>Sim, para <code>dados@trademaster.com.br</code></dd>
+                            
+                            <dt>Retentativas (Retries)</dt>
+                            <dd>2 tentativas com 5 minutos de intervalo</dd>
+                            
+                            <dt>Catchup</dt>
+                            <dd><code>False</code> (Não executa execuções passadas perdidas)</dd>
+
+                            <dt>Pool de Execução</dt>
+                            <dd><code>reports_pool</code></dd>
+                        </dl>
+                    </div>
+                    <div class="flow-diagram">
+                        <h3>Fluxo de Execução Visual</h3>
+                        <div class="flow-start">Início da DAG</div>
+                        <div class="flow-arrow">↓</div>
+                        <div class="parallel-tasks">
+                            <div>
+                                <div class="flow-task">update_table_ operations_legacy</div>
+                                <div class="flow-task">update_table_ clients_legacy</div>
+                            </div>
+                            <div>
+                                <div class="flow-task">update_table_ operations_prod</div>
+                                <div class="flow-task">update_table_ clients_prod</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>Análise e Recomendações (Code Review)</h2>
+                <h3>Pontos Fortes</h3>
+                <ul class="recommendations">
+                    <li><strong>Modularidade:</strong> O uso de uma função centralizada <code>bigquery_utils.execute_bigquery_query</code> é uma excelente prática.</li>
+                    <li><strong>Gerenciamento de Recursos:</strong> A utilização do pool <code>reports_pool</code> é crucial para o controle de concorrência.</li>
+                </ul>
+                <h3>Recomendações</h3>
+                 <ul class="recommendations">
+                    <li><strong>Desativação do Legado:</strong> Para facilitar a desativação do ambiente legado no futuro, sugiro controlar a execução das tasks <code>_legacy</code> com uma <strong>Airflow Variable</strong>.</li>
+                    <li><strong>Idempotência:</strong> A garantia de idempotência depende criticamente da lógica idempotente dentro dos scripts SQL (usando, por exemplo, <code>CREATE OR REPLACE TABLE</code> ou <code>MERGE</code>).</li>
+                    <li><strong>Repositório de Código:</strong> O ideal é manter um link para o repositório Git onde a DAG está versionada, garantindo que a documentação aponte sempre para a versão mais atual do código.</li>
+                </ul>
+            </section>
+        </article>
+    </main>
+
+</body>
+</html>
