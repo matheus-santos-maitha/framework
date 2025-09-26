@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise: validation.py</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
     <style>
         /* Estilo para o link de citação */
         a.citation-link {
@@ -23,6 +23,13 @@
             background-color: var(--secondary-color, #3498db);
             color: white;
         }
+        pre.alert-message {
+            background-color: #fffbe6;
+            color: #5d4c18;
+            border: 1px solid #ffe58f;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body>
@@ -34,7 +41,7 @@
         <ul>
             <li><a href="utils_vm.html">utils_vm.py</a></li>
             <li><a href="environment.html">environment.py</a></li>
-            <li><a href="utils.html">utils.py</a></li>
+            <li><a href="framework_core.html">framework_core.py (Análise Original)</a></li>
         </ul>
         <h4>Conectores e Acesso a Dados</h4>
         <ul>
@@ -51,7 +58,7 @@
         <ul>
             <li><a href="manage_dataframe.html">manage_dataframe.py</a></li>
             <li><a href="transformation.html">transformation.py</a></li>
-            <li><a href="validation.html">validation.py</a></li>
+            <li><a href="validation.html" class="active">validation.py</a></li>
         </ul>
     </nav>
 
@@ -73,16 +80,72 @@
                 <p>O script contém várias funções cujo objetivo é validar a consistência e a qualidade dos dados. As falhas nessas validações são classificadas como "warnings" do processo.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
                 <ul>
                     <li><code>qtd_rows_validation(args)</code>: Corresponde à "validação de quantidade registros na origem".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
-                    <li><code>chk_qty_columns(args)</code>: Corresponde à "validação de quantidade colunas".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Se houver divergência, a função identifica e retorna quais colunas são diferentes.</li>
-                    <li><code>validate_date(df)</code>: Valida se os dados em colunas do tipo data seguem o padrão esperado.</li>
-                    <li><code>dat_updated_created(tb_name)</code>: Valida a consistência lógica entre campos de data de criação e atualização.</li>
+                    <li><code>chk_qty_columns(args)</code>: Corresponde à "validação de quantidade colunas".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
                     <li><strong>Funções Comentadas (<code>row_duplicity</code>, <code>is_duplicated</code>)</strong>: O código inclui lógica para verificação de "dados duplicados", que é uma das validações mencionadas na documentação.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
                 </ul>
 
                 <h3>Função de Notificação</h3>
                 <ul>
-                    <li><code>send_message_chat(args)</code>: Esta função é explicitamente nomeada na documentação como o "Método chamado send_message_chat que fica no código validation.py".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Ela é utilizada para enviar notificações de "warning" para um chat específico do Google, cuja URL é passada como parâmetro.<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></li>
+                    <li><code>send_message_chat(args)</code>: Esta função é explicitamente nomeada na documentação como o "Método chamado send_message_chat que fica no código validation.py".<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a> Ela é utilizada para enviar notificações de "warning" para um chat específico do Google.</li>
                 </ul>
+            </section>
+
+            <section>
+                <h2>Exemplo Prático: Detecção de Divergência de Esquema</h2>
+                <p>Para ilustrar como o framework opera, vamos a um cenário prático de detecção de um erro comum em engenharia de dados.</p>
+                
+                <h3>O Cenário</h3>
+                <p>A equipe de desenvolvimento adiciona duas novas colunas (<code>total_finish_value</code> e <code>total_finish_qtdy</code>) na tabela <code>postgres_cession_batch</code> no banco de dados de origem. No entanto, a equipe de dados não é notificada da mudança.</p>
+
+                <h3>A Detecção e o Alerta</h3>
+                <p>Na próxima execução agendada, o job <code>migracao_tabelas_bronze</code> é iniciado. Dentro dele, a função <code>chk_qty_columns</code> do módulo <code>validation.py</code> é executada. Ela compara o esquema da origem (agora com 41 colunas) com o da tabela no BigQuery (ainda com 39). Ao detectar a divergência, a função <code>send_message_chat</code> é acionada, enviando o seguinte alerta para o grupo "Warning DAGs":<a href="sources/Monitoracao_DAGs.pdf#page=1" class="citation-link" target="_blank">[fonte]</a></p>
+                
+                <figure>
+                    <figcaption>Exemplo de Notificação de Warning no Google Chat</figcaption>
+                    <pre class="alert-message"><code>*Failed JOB Alert*
+
+*Project ID*: trade-data-bi-dev
+*Region*: us-east1
+*Task Id*: migracao_tabelas_bronze
+*Timestamp*: 2025-09-25T10:30:52.905827
+*Layer*: bronze
+*Database*: postgres
+*Table*: postgres_cession_batch
+*Failed Message*: {
+    "failed": "Quantidade de colunas na origem diferente do Bigquery. Qtd. Origem - 41, Qtd Destino - 39 - Novas colunas - [('total_finish_value', 'numeric'), ('total_finish_qtdy', 'bigint')]"
+}</code></pre>
+                </figure>
+                
+                <h3>A Resolução</h3>
+                <p>Com este alerta, a equipe de dados é notificada proativamente sobre a mudança de esquema. O alerta informa não apenas a divergência, mas exatamente quais são as novas colunas e seus tipos. Enquanto a equipe planeja a adição das novas colunas no BigQuery, o pipeline continua a carregar os dados das 39 colunas existentes, sem interromper o fluxo de dados.</p>
+                
+                <details>
+                    <summary>Trecho de Código Relevante em <code>validation.py</code></summary>
+                    <p>O trecho abaixo, da função <code>chk_qty_columns</code>, mostra a lógica que dispara a identificação das colunas divergentes.</p>
+                    <pre><code># ... (código anterior para obter qty_col_source e qty_col_bq)
+
+if qty_col_source == qty_col_bq:
+    bol = True
+    col_result = ''
+else:
+    # Se a contagem for diferente, o código entra aqui
+    if qty_col_bq > 0:
+        # Busca o esquema da origem
+        df_source = OrigemConn.get_schema(tb_name_source)
+        dict_source = convert_df_dict(df_source)
+        
+        # Busca o esquema do BigQuery
+        df_bq = columns_bq(bqconnector, tb_name)
+        dict_bq = convert_df_dict(df_bq)
+        
+        # Compara os dois esquemas e encontra as colunas diferentes
+        col_result = dict_diff(dict_source, dict_bq)
+    else:
+        col_result = ''
+
+# A variável 'col_result' é usada na mensagem de alerta
+return bol, qty_col_source, qty_col_bq, col_result</code></pre>
+                </details>
             </section>
 
         </article>
